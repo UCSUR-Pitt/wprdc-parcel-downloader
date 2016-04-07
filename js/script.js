@@ -10,6 +10,26 @@ var map = new L.Map('map', {
     zoom: 11
 });
 
+var regions = [];
+$.getJSON('data/regions.json', function (data) {
+    console.log(data);
+    for (var i = 0; i < data.length; i++) {
+        console.log(data[i]);
+        regions.push(data[i]);
+        $('#region-list ul').append($('<li>').append(
+            $('<input>')
+                .attr('class','u-iblock u-malign')
+                .attr('type', 'radio')
+                .attr('for', 'option'+i)
+                .attr('name', 'area')
+                .attr('value', 'currentView')
+            
+        ))
+    }
+    console.log(regions);
+});
+
+
 L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
 }).addTo(map);
@@ -87,7 +107,11 @@ cartodb.createLayer(map, layerUrl)
 
         muniLayer.hide();  //hide municipality polygons
         hoodLayer.hide();
-        muniLayer.on('featureClick', processMuni);
+        muniLayer.on('featureClick', function (e, latlng, pos, data, layer) {
+            console.log(layer);
+            console.log(data);
+            processRegion(data, layer);
+        });
         hoodLayer.on('featureClick', processNeighborhood);
     });
 
@@ -252,11 +276,31 @@ $('.download').click(function () {
 
 
 });
-
 //functions
 
+function processRegion(data, layer) {
+    var region_id = data.cartodb_id;
+    selectLayer.clearLayers();          // clear out old layer view
+    var sql = new cartodb.SQL({user: 'wprdc'});
+    sql.execute("SELECT the_geom FROM allegheny_county_municipal_boundaries WHERE cartodb_id = {{id}}",
+        {
+            id: data.cartodb_id
+        },
+        {
+            format: 'geoJSON'
+        }
+        )
+        .done(function (data) {
+            console.log(data);
+            selectLayer.addData(data);
+            //setup SQL statement for intersection
+            mPolygon = '(SELECT the_geom FROM allegheny_county_municipal_boundaries WHERE cartodb_id = ' + region_id + ')';
+        })
+}
+
+
 //when a polygon is clicked in Neighborhood View, download its geojson, etc
-function processMuni(e, latlng, pos, data, layer) {
+function processMuni(data) {
     console.log('Muni data', data);
     var nid = data.cartodb_id;
     selectLayer.clearLayers();
