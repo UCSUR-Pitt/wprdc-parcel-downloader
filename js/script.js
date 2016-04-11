@@ -16,15 +16,21 @@ $.getJSON('data/regions.json', function (data) {
     for (var i = 0; i < data.length; i++) {
         console.log(data[i]);
         regions.push(data[i]);
-        $('#region-list ul').append($('<li>').append(
-            $('<input>')
-                .attr('class','u-iblock u-malign')
-                .attr('type', 'radio')
-                .attr('for', 'option'+i)
-                .attr('name', 'area')
-                .attr('value', 'currentView')
-            
-        ))
+        $('#region-list')
+            .append($('<li>')
+                .append($('<label>')
+                .append($('<input>')
+                        .attr('class', 'u-iblock u-malign')
+                        .attr('type', 'radio')
+                        .attr('for', 'region-' + data[i].layer)
+                        .attr('name', 'area')
+                        .attr('value', 'currentView')
+                )
+                .append($('<p>')
+                    .attr('class', 'u-iblock u-malign')
+                    .attr('id', 'region-' + data[i].layer)
+                    .text("\u00A0" + data[i].name)
+                )))
     }
     console.log(regions);
 });
@@ -297,7 +303,6 @@ function processRegion(data, layer) {
             mPolygon = '(SELECT the_geom FROM allegheny_county_municipal_boundaries WHERE cartodb_id = ' + region_id + ')';
         })
 }
-
 
 //when a polygon is clicked in Neighborhood View, download its geojson, etc
 function processMuni(data) {

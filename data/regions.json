@@ -1,10 +1,5 @@
 [
   {
-    "name": "Current Map View",
-    "layer": 0,
-    "table": ""
-  }
-  {
     "name": "Municipality",
     "layer": 1,
     "table": "allegheny_county_municipal_boundaries"
