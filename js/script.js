@@ -247,7 +247,12 @@ $('.download').click(function () {
         data.cartodb = true;
     }
 
-    var queryTemplate = 'https://wprdc.carto.com/api/v2/sql?skipfields=cartodb_id,created_at,updated_at,name,description&format={{type}}&filename=parcel_data&q=SELECT the_geom{{fields}} FROM property_assessment_app a WHERE ST_INTERSECTS({{{intersects}}}, a.the_geom)';
+    /********************************************************
+     * GET PINS WITHIN SELECTION FROM CARTO
+     ********************************************************/
+    var queryTemplate = 'https://wprdc.carto.com/api/v2/' +
+        'sql?skipfields=cartodb_id,created_at,updated_at,name,description&format={{type}}&filename=parcel_data' +
+        '&q=SELECT the_geom, PIN FROM property_assessment_app a WHERE ST_INTERSECTS({{{intersects}}}, a.the_geom)';
 
 
     var buildquery = Handlebars.compile(queryTemplate);
