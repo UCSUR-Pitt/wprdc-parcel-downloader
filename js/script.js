@@ -4,6 +4,8 @@ var backdrop, muniLayer;
 var nPolygon;
 var mPolygon;
 
+var api_url = "localhost:8000/property/data_within/"
+
 //initialize map
 var map = new L.Map('map', {
     center: [40.45, -79.9959],
@@ -102,7 +104,7 @@ $.getJSON('data/fields.json', function (data) {
             + '<span class="glyphicon glyphicon-info-sign icon-right" aria-hidden="true"></span></li>'
 
         $('.fieldList').append(listItem);
-        $('#' + field.name).data("description", field.description);
+        $('#' + field.name).data("description", field.description).data("resource", field.resource);
 
     });
 
@@ -176,7 +178,7 @@ $('input[type=radio][name=area]').change(function () {
     }
 });
 
-var flush_selections = function(){
+var flush_selections = function () {
     customPolygon = undefined;
     nPolygon = undefined;
     mPolygon = undefined;
@@ -195,16 +197,8 @@ $('.download').click(function () {
     console.log(checked);
 
     //generate comma-separated list of fields
-    data.fields = '';
-    for (var i = 0; i < checked.length; i++) {
-        data.fields += checked[i] + ',';
-    }
+    data.fields = JSON.stringify(checked);
     console.log(data.fields);
-
-    //only add leading comma if at least one field is selected
-    if (data.fields.length > 0) {
-        data.fields = ',' + data.fields.slice(0, -1);
-    }
 
 
     if (areaType == 'currentView') {
@@ -217,7 +211,7 @@ $('.download').click(function () {
     }
 
     if (areaType == 'polygon') {
-        if(customPolygon == undefined){
+        if (customPolygon == undefined) {
             alert("Don't forget to draw your area on the map!");
             return;
         }
@@ -226,7 +220,7 @@ $('.download').click(function () {
 
 
     if (areaType == 'municipality') {
-        if(mPolygon == undefined){
+        if (mPolygon == undefined) {
             alert("Don't forget to select your municipality from the map!");
             return;
         }
@@ -235,7 +229,7 @@ $('.download').click(function () {
     }
 
     if (areaType == 'neighborhood') {
-        if(nPolygon == undefined){
+        if (nPolygon == undefined) {
             alert("Don't forget to select your neighborhood from the map!");
             return;
         }
@@ -248,15 +242,10 @@ $('.download').click(function () {
     }
 
     /********************************************************
-     * GET PINS WITHIN SELECTION FROM CARTO
+     * GET PINS WITHIN SELECTION
      ********************************************************/
-    var queryTemplate = 'https://wprdc.carto.com/api/v2/' +
-        'sql?skipfields=cartodb_id,created_at,updated_at,name,description&format={{type}}&filename=parcel_data' +
-        '&q=SELECT the_geom, PIN FROM property_assessment_app a WHERE ST_INTERSECTS({{{intersects}}}, a.the_geom)';
-
-
+    var queryTemplate = api_url + "?shape={{{intersects}}}&fields={{{fields}}}";
     var buildquery = Handlebars.compile(queryTemplate);
-    console.log(data);
     var url = buildquery(data);
 
     console.log("Downloading " + url);
@@ -300,7 +289,7 @@ function processMuni(e, latlng, pos, data, layer) {
         {
             format: 'geoJSON'
         }
-        )
+    )
         .done(function (data) {
             console.log(data);
             selectLayer.addData(data);
@@ -323,7 +312,7 @@ function processNeighborhood(e, latlng, pos, data, layer) {
         {
             format: 'geoJSON'
         }
-        )
+    )
         .done(function (data) {
             console.log(data);
             selectLayer.addData(data);
@@ -429,7 +418,10 @@ function initCheckboxes() {
 function listChecked() {
     var checkedItems = [];
     $(".fieldList li.active").each(function (idx, li) {
-        checkedItems.push($(li).attr('id'));
+        checkedItems.push({
+            'f': $(li).attr('id'),
+            'r': $(li).data('resource')
+        });
         console.log(checkedItems);
     });
     return checkedItems;
