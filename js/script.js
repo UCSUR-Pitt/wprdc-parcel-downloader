@@ -4,9 +4,12 @@ var backdrop, muniLayer;
 var nPolygon;
 var mPolygon;
 
-var api_url = "localhost:8000/property/data_within/"
+var api_url = "https://tools.wprdc.org/property-api/data_within/";
 
-//initialize map
+/**************************************
+ * MAP STUFF
+ *
+ **************************************/
 var map = new L.Map('map', {
     center: [40.45, -79.9959],
     zoom: 11
@@ -244,7 +247,8 @@ $('.download').click(function () {
     /********************************************************
      * GET PINS WITHIN SELECTION
      ********************************************************/
-    var queryTemplate = api_url + "?shape={{{intersects}}}&fields={{{fields}}}";
+    // Generate query for property-api
+    var queryTemplate = api_url + "?shape={{{intersects}}}&fields={{{fields}}}&type={{{type}}}";
     var buildquery = Handlebars.compile(queryTemplate);
     var url = buildquery(data);
 
@@ -252,23 +256,16 @@ $('.download').click(function () {
 
     //http://oneclick.carto.com/?file={{YOUR FILE URL}}&provider={{PROVIDER NAME}}&logo={{YOUR LOGO URL}}
     if (data.cartodb) {
-        //open in cartodb only works if you encodeURIcomponent() on the SQL,
-        //then concatenate with the rest of the URL, then encodeURIcomponent() the whole thing
-
-        //first, get the SQL
-        var sql = url.split("q=");
-        sql = encodeURIComponent(sql[1]);
-
-
-        url = url.split("SELECT")[0];
-        url += sql;
-
         url = encodeURIComponent(url);
-        console.log(url);
         url = 'https://oneclick.carto.com/?file=' + url;
+        console.log(url);
+        window.open(url);
+    }
+    else {
+        console.log(url);
+        window.open(url);
     }
 
-    window.open(url, 'My Download');
 
 
 });
@@ -338,7 +335,7 @@ function makeSqlPolygon(coords) {
             s += firstCoord.lng + " " + firstCoord.lat;
         }
     });
-    s += "))\'),4326)"
+    s += "))\'),4326)";
     console.log(s);
     return s;
 }
